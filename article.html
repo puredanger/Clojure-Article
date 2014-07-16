@@ -1057,43 +1057,45 @@ user=&gt; (* n 3)
     
     <h2><a name="Vars">Vars</a></h2>
     <p>
-      Clojure provides bindings to Vars, which are containers bound to mutable
-      storage locations. There are global bindings, thread-local bindings,
-      bindings that are local to a function, and bindings that are local to a given form.
-    </p>
-    </p>
-      Function parameters are bound to Vars that are local to the function.
+      Clojure provides several ways to bind a name (represented by a symbol) to a value.
     </p>
     <p>
-      The <code>def</code> special form binds a value to a symbol. It provides a
-      mechanism to define metadata, <code>:dynamic</code>,  which allows a thread-local value
-      within the scope of a <code>binding</code> call.
-      In other words, it allows re-definition of assigned value per execution thread
-      and scope. If the Var is not re-assigned to a new value in a separate
-      execution thread, the Var refers to the value of the root binding,
-      if accessed from another thread.
+      Some names are local to a function or a form (this is known as "lexical scope"). 
+      For example, function parameters are locally available names and are only meaningful
+      within the function.
+    </p>
     <p>
-      The <code>let</code> special form creates bindings to Vars
-      that are bound to the scope within the statement.
+      The <code>let</code> special form binds names to values
+      within the scope of the <code>let</code> expression.
       Its first argument is a vector containing name/expression pairs.
       The expressions are evaluated in order and their results
       are assigned to the names on their left.
-      These Vars can be used in the binding of other Vars declared within the vector.
-      The expressions following the Var declaration vector
-      contain the Var(s) that are executed only within the <code>let</code> scope. 
-      Vars within functions that are called within <code>let</code> but 
-      defined outside of that scope are not affected 
-      by the declarations in the <code>let</code>'s vector. 
-       </p>
+      The binding expressions can refer to names previously defined in the vector.
+      If a name is reused within the binding vector, it replaces any previous 
+      binding.
+      After the binding vector is a body of expressions that will be evaluated
+      in the context of the bindings defined in the binding vector and whatever names
+      were already in scope from the surrounding expression.
+    </p>
+    <p>
+      Globally accessible names are bound to Vars, which are mutable storage containers.
+    </p>
+    <p>
+      The <code>def</code> special form binds a symbol to a Var, typically with a
+      root value. 
+      It also provides a mechanism, using a <code>:dynamic</code> metadata 
+      annotation, which allows a thread-local value within the scope of a <code>binding</code> call.
+      In other words, it allows re-definition of assigned value per execution thread
+      and scope. 
+      If the Var is not re-assigned to a new value in a separate
+      execution thread, the Var refers to the value of the root binding.
+    </p>
     <p>
       <a name="binding">The</a> <code>binding</code> macro
       is similar to <code>let</code>,
       but it gives new, thread-local values
       to existing global bindings throughout the scope's
       thread of execution.
-      The values of Vars bound within the <code>let</code> 
-      vector argument are also used in functions, if they use
-      the same Var names, called from inside that scope.
       When the execution thread leaves the <code>binding</code> macro's scope,
       the global Var bindings revert to their previous values.
       Starting in Clojure 1.3, binding can only do this for vars
@@ -1134,7 +1136,7 @@ user=&gt; (* n 3)
 
 (defn f2 []
   (println "f2: before let v:" v) 
-  ; creates local binding v that shadows global one
+  ; creates local binding v that lexically shadows global one
   (let [v 2]
     ; local binding only within this let statement
     (println "f2: in let, v:" v)
@@ -1153,7 +1155,7 @@ user=&gt; (* n 3)
   (println "f3: after binding v:" v)) 
 
 (defn f4 []
- (def v 4)) ; changes the value of v in the global scope
+ (var-set v 4)) ; changes the value of v in the global scope
 
 (println "(= v 1) => " (= v 1))
 (println "Calling f2: ")
